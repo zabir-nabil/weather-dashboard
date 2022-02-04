@@ -16,6 +16,10 @@
     <script src="https://code.highcharts.com/maps/modules/data.js"></script>
     <script src="https://code.highcharts.com/maps/modules/offline-exporting.js"></script>
     <script src="https://code.highcharts.com/mapdata/countries/us/us-all.js"></script>
+    <script src="https://code.highcharts.com/modules/windbarb.js"></script>
+
+    <script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
 
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
@@ -248,40 +252,67 @@
             </div>
           </div>
         </div>
+
+        <br>
         <div class="xl:flex mt-10">
+          
           <div
             id="container"
             class="mt-10"
-            style="width: 100%; height: 400px;"
+            style="width: 100%; height: 600px;"
           ></div>
           <div
-            id="chart2"
+            id="chart4"
             class="mt-10"
             style="width: 100%; height: 600px;"
           >
           
           </div>
-          <div
-            id="chart3"
-            class="mt-10"
-            style="width: 100%; height: 400px;"
-          ></div>
         </div>
+        <div class="xl:flex mt-10">
+          <div
+          id="chart2"
+          class="mt-10"
+          style="width: 100%; height: 400px;"
+          >
+        </div>
+        </div>
+
+        <hr>
+
+        <div class="xl:flex mt-10">
+          <div
+          id="chart7"
+          class="mt-10"
+          style="width: 100%; height: 600px;"
+          >
+        </div>
+        </div>
+
+        <br>
+
+        <hr>
         <div>
           <img src="static/worldwide_total_perticipitation.png">
-          <p style="text-align: center;">Data Source: https://cds.climate.copernicus.eu/cdsapp Map Analysis: URL</p>
+          <p style="text-align: center;"><bold>Data Source:</bold> <a href="https://cds.climate.copernicus.eu/cdsapp">https://cds.climate.copernicus.eu/cdsapp</a> <bold>Map Analysis:</bold> <a href = "https://github.com/zabir-nabil/weather-dashboard/blob/main/climate_analysis.ipynb">jupyter notebook</a></p>
         </div>
+        <br>
         <hr>
+        <br>
         <div>
           <img src="static/worldwide_skin_temp.png">
-          <p style="text-align: center;">Map Analysis: URL</p>
+          <p style="text-align: center;"><bold>Data Source:</bold> <a href="https://cds.climate.copernicus.eu/cdsapp">https://cds.climate.copernicus.eu/cdsapp</a> <bold>Map Analysis:</bold> <a href = "https://github.com/zabir-nabil/weather-dashboard/blob/main/climate_analysis.ipynb">jupyter notebook</a></p>
         </div>
+        <br>
         <hr>
+        <br>
         <div>
           <img src="static/worldwide_wind_swell.png">
-          <p style="text-align: center;">Map Analysis: URL</p>
+          <p style="text-align: center;"><bold>Data Source:</bold> <a href="https://cds.climate.copernicus.eu/cdsapp">https://cds.climate.copernicus.eu/cdsapp</a> <bold>Map Analysis:</bold> <a href = "https://github.com/zabir-nabil/weather-dashboard/blob/main/climate_analysis.ipynb">jupyter notebook</a></p>
         </div>
+        <br>
         <hr>
+        <br>
       </div>
     </main>
     <script language="JavaScript">
@@ -358,6 +389,1744 @@
       });
 
 
+
+      // weather forecast plot
+
+    function Meteogram(json, container) {
+    // Parallel arrays for the chart data, these are populated as the JSON file
+    // is loaded
+    this.symbols = [];
+    this.precipitations = [];
+    this.precipitationsError = []; // Only for some data sets
+    this.winds = [];
+    this.temperatures = [];
+    this.pressures = [];
+
+    // Initialize
+    this.json = json;
+    this.container = container;
+
+    // Run
+    this.parseYrData();
+}
+
+/**
+ * Mapping of the symbol code in yr.no's API to the icons in their public
+ * GitHub repo, as well as the text used in the tooltip.
+ *
+ * https://api.met.no/weatherapi/weathericon/2.0/documentation
+ */
+Meteogram.dictionary = {
+    clearsky: {
+        symbol: '01',
+        text: 'Clear sky'
+    },
+    fair: {
+        symbol: '02',
+        text: 'Fair'
+    },
+    partlycloudy: {
+        symbol: '03',
+        text: 'Partly cloudy'
+    },
+    cloudy: {
+        symbol: '04',
+        text: 'Cloudy'
+    },
+    lightrainshowers: {
+        symbol: '40',
+        text: 'Light rain showers'
+    },
+    rainshowers: {
+        symbol: '05',
+        text: 'Rain showers'
+    },
+    heavyrainshowers: {
+        symbol: '41',
+        text: 'Heavy rain showers'
+    },
+    lightrainshowersandthunder: {
+        symbol: '24',
+        text: 'Light rain showers and thunder'
+    },
+    rainshowersandthunder: {
+        symbol: '06',
+        text: 'Rain showers and thunder'
+    },
+    heavyrainshowersandthunder: {
+        symbol: '25',
+        text: 'Heavy rain showers and thunder'
+    },
+    lightsleetshowers: {
+        symbol: '42',
+        text: 'Light sleet showers'
+    },
+    sleetshowers: {
+        symbol: '07',
+        text: 'Sleet showers'
+    },
+    heavysleetshowers: {
+        symbol: '43',
+        text: 'Heavy sleet showers'
+    },
+    lightsleetshowersandthunder: {
+        symbol: '26',
+        text: 'Light sleet showers and thunder'
+    },
+    sleetshowersandthunder: {
+        symbol: '20',
+        text: 'Sleet showers and thunder'
+    },
+    heavysleetshowersandthunder: {
+        symbol: '27',
+        text: 'Heavy sleet showers and thunder'
+    },
+    lightsnowshowers: {
+        symbol: '44',
+        text: 'Light snow showers'
+    },
+    snowshowers: {
+        symbol: '08',
+        text: 'Snow showers'
+    },
+    heavysnowshowers: {
+        symbol: '45',
+        text: 'Heavy show showers'
+    },
+    lightsnowshowersandthunder: {
+        symbol: '28',
+        text: 'Light snow showers and thunder'
+    },
+    snowshowersandthunder: {
+        symbol: '21',
+        text: 'Snow showers and thunder'
+    },
+    heavysnowshowersandthunder: {
+        symbol: '29',
+        text: 'Heavy snow showers and thunder'
+    },
+    lightrain: {
+        symbol: '46',
+        text: 'Light rain'
+    },
+    rain: {
+        symbol: '09',
+        text: 'Rain'
+    },
+    heavyrain: {
+        symbol: '10',
+        text: 'Heavy rain'
+    },
+    lightrainandthunder: {
+        symbol: '30',
+        text: 'Light rain and thunder'
+    },
+    rainandthunder: {
+        symbol: '22',
+        text: 'Rain and thunder'
+    },
+    heavyrainandthunder: {
+        symbol: '11',
+        text: 'Heavy rain and thunder'
+    },
+    lightsleet: {
+        symbol: '47',
+        text: 'Light sleet'
+    },
+    sleet: {
+        symbol: '12',
+        text: 'Sleet'
+    },
+    heavysleet: {
+        symbol: '48',
+        text: 'Heavy sleet'
+    },
+    lightsleetandthunder: {
+        symbol: '31',
+        text: 'Light sleet and thunder'
+    },
+    sleetandthunder: {
+        symbol: '23',
+        text: 'Sleet and thunder'
+    },
+    heavysleetandthunder: {
+        symbol: '32',
+        text: 'Heavy sleet and thunder'
+    },
+    lightsnow: {
+        symbol: '49',
+        text: 'Light snow'
+    },
+    snow: {
+        symbol: '13',
+        text: 'Snow'
+    },
+    heavysnow: {
+        symbol: '50',
+        text: 'Heavy snow'
+    },
+    lightsnowandthunder: {
+        symbol: '33',
+        text: 'Light snow and thunder'
+    },
+    snowandthunder: {
+        symbol: '14',
+        text: 'Snow and thunder'
+    },
+    heavysnowandthunder: {
+        symbol: '34',
+        text: 'Heavy snow and thunder'
+    },
+    fog: {
+        symbol: '15',
+        text: 'Fog'
+    }
+};
+
+/**
+ * Draw the weather symbols on top of the temperature series. The symbols are
+ * fetched from yr.no's MIT licensed weather symbol collection.
+ * https://github.com/YR/weather-symbols
+ */
+Meteogram.prototype.drawWeatherSymbols = function (chart) {
+
+    chart.series[0].data.forEach((point, i) => {
+        if (this.resolution > 36e5 || i % 2 === 0) {
+
+            const [symbol, specifier] = this.symbols[i].split('_'),
+                icon = Meteogram.dictionary[symbol].symbol +
+                    ({ day: 'd', night: 'n' }[specifier] || '');
+
+            if (Meteogram.dictionary[symbol]) {
+                chart.renderer
+                    .image(
+                        'https://cdn.jsdelivr.net/gh/nrkno/yr-weather-symbols' +
+                            `@8.0.1/dist/svg/${icon}.svg`,
+                        point.plotX + chart.plotLeft - 8,
+                        point.plotY + chart.plotTop - 30,
+                        30,
+                        30
+                    )
+                    .attr({
+                        zIndex: 5
+                    })
+                    .add();
+            } else {
+                console.log(symbol);
+            }
+        }
+    });
+};
+
+
+/**
+ * Draw blocks around wind arrows, below the plot area
+ */
+Meteogram.prototype.drawBlocksForWindArrows = function (chart) {
+    const xAxis = chart.xAxis[0];
+
+    for (
+        let pos = xAxis.min, max = xAxis.max, i = 0;
+        pos <= max + 36e5; pos += 36e5,
+        i += 1
+    ) {
+
+        // Get the X position
+        const isLast = pos === max + 36e5,
+            x = Math.round(xAxis.toPixels(pos)) + (isLast ? 0.5 : -0.5);
+
+        // Draw the vertical dividers and ticks
+        const isLong = this.resolution > 36e5 ?
+            pos % this.resolution === 0 :
+            i % 2 === 0;
+
+        chart.renderer
+            .path([
+                'M', x, chart.plotTop + chart.plotHeight + (isLong ? 0 : 28),
+                'L', x, chart.plotTop + chart.plotHeight + 32,
+                'Z'
+            ])
+            .attr({
+                stroke: chart.options.chart.plotBorderColor,
+                'stroke-width': 1
+            })
+            .add();
+    }
+
+    // Center items in block
+    chart.get('windbarbs').markerGroup.attr({
+        translateX: chart.get('windbarbs').markerGroup.translateX + 8
+    });
+
+};
+
+/**
+ * Build and return the Highcharts options structure
+ */
+Meteogram.prototype.getChartOptions = function () {
+    return {
+        chart: {
+            renderTo: this.container,
+            marginBottom: 70,
+            marginRight: 40,
+            marginTop: 50,
+            plotBorderWidth: 1,
+            height: 310,
+            alignTicks: false,
+            scrollablePlotArea: {
+                minWidth: 720
+            }
+        },
+
+        defs: {
+            patterns: [{
+                id: 'precipitation-error',
+                path: {
+                    d: [
+                        'M', 3.3, 0, 'L', -6.7, 10,
+                        'M', 6.7, 0, 'L', -3.3, 10,
+                        'M', 10, 0, 'L', 0, 10,
+                        'M', 13.3, 0, 'L', 3.3, 10,
+                        'M', 16.7, 0, 'L', 6.7, 10
+                    ].join(' '),
+                    stroke: '#68CFE8',
+                    strokeWidth: 1
+                }
+            }]
+        },
+
+        title: {
+            text: 'Meteogram for {{ location }} (Latitude: {{ lat }}, Longitude: {{ lon }})',
+            align: 'left',
+            style: {
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
+            }
+        },
+
+        credits: {
+            text: 'Forecast from <a href="https://yr.no">yr.no</a>',
+            href: 'https://yr.no',
+            position: {
+                x: -40
+            }
+        },
+
+        tooltip: {
+            shared: true,
+            useHTML: true,
+            headerFormat:
+                '<small>{point.x:%A, %b %e, %H:%M} - {point.point.to:%H:%M}</small><br>' +
+                '<b>{point.point.symbolName}</b><br>'
+
+        },
+
+        xAxis: [{ // Bottom X axis
+            type: 'datetime',
+            tickInterval: 2 * 36e5, // two hours
+            minorTickInterval: 36e5, // one hour
+            tickLength: 0,
+            gridLineWidth: 1,
+            gridLineColor: 'rgba(128, 128, 128, 0.1)',
+            startOnTick: false,
+            endOnTick: false,
+            minPadding: 0,
+            maxPadding: 0,
+            offset: 30,
+            showLastLabel: true,
+            labels: {
+                format: '{value:%H}'
+            },
+            crosshair: true
+        }, { // Top X axis
+            linkedTo: 0,
+            type: 'datetime',
+            tickInterval: 24 * 3600 * 1000,
+            labels: {
+                format: '{value:<span style="font-size: 12px; font-weight: bold">%a</span> %b %e}',
+                align: 'left',
+                x: 3,
+                y: -5
+            },
+            opposite: true,
+            tickLength: 20,
+            gridLineWidth: 1
+        }],
+
+        yAxis: [{ // temperature axis
+            title: {
+                text: null
+            },
+            labels: {
+                format: '{value}°',
+                style: {
+                    fontSize: '10px'
+                },
+                x: -3
+            },
+            plotLines: [{ // zero plane
+                value: 0,
+                color: '#BBBBBB',
+                width: 1,
+                zIndex: 2
+            }],
+            maxPadding: 0.3,
+            minRange: 8,
+            tickInterval: 1,
+            gridLineColor: 'rgba(128, 128, 128, 0.1)'
+
+        }, { // precipitation axis
+            title: {
+                text: null
+            },
+            labels: {
+                enabled: false
+            },
+            gridLineWidth: 0,
+            tickLength: 0,
+            minRange: 10,
+            min: 0
+
+        }, { // Air pressure
+            allowDecimals: false,
+            title: { // Title on top of axis
+                text: 'hPa',
+                offset: 0,
+                align: 'high',
+                rotation: 0,
+                style: {
+                    fontSize: '10px',
+                    color: Highcharts.getOptions().colors[2]
+                },
+                textAlign: 'left',
+                x: 3
+            },
+            labels: {
+                style: {
+                    fontSize: '8px',
+                    color: Highcharts.getOptions().colors[2]
+                },
+                y: 2,
+                x: 3
+            },
+            gridLineWidth: 0,
+            opposite: true,
+            showLastLabel: false
+        }],
+
+        legend: {
+            enabled: false
+        },
+
+        plotOptions: {
+            series: {
+                pointPlacement: 'between'
+            }
+        },
+
+
+        series: [{
+            name: 'Temperature',
+            data: this.temperatures,
+            type: 'spline',
+            marker: {
+                enabled: false,
+                states: {
+                    hover: {
+                        enabled: true
+                    }
+                }
+            },
+            tooltip: {
+                pointFormat: '<span style="color:{point.color}">\u25CF</span> ' +
+                    '{series.name}: <b>{point.y}°C</b><br/>'
+            },
+            zIndex: 1,
+            color: '#FF3333',
+            negativeColor: '#48AFE8'
+        }, {
+            name: 'Precipitation',
+            data: this.precipitationsError,
+            type: 'column',
+            color: 'url(#precipitation-error)',
+            yAxis: 1,
+            groupPadding: 0,
+            pointPadding: 0,
+            tooltip: {
+                valueSuffix: ' mm',
+                pointFormat: '<span style="color:{point.color}">\u25CF</span> ' +
+                    '{series.name}: <b>{point.minvalue} mm - {point.maxvalue} mm</b><br/>'
+            },
+            grouping: false,
+            dataLabels: {
+                enabled: this.hasPrecipitationError,
+                filter: {
+                    operator: '>',
+                    property: 'maxValue',
+                    value: 0
+                },
+                style: {
+                    fontSize: '8px',
+                    color: 'gray'
+                }
+            }
+        }, {
+            name: 'Precipitation',
+            data: this.precipitations,
+            type: 'column',
+            color: '#68CFE8',
+            yAxis: 1,
+            groupPadding: 0,
+            pointPadding: 0,
+            grouping: false,
+            dataLabels: {
+                enabled: !this.hasPrecipitationError,
+                filter: {
+                    operator: '>',
+                    property: 'y',
+                    value: 0
+                },
+                style: {
+                    fontSize: '8px',
+                    color: 'gray'
+                }
+            },
+            tooltip: {
+                valueSuffix: ' mm'
+            }
+        }, {
+            name: 'Air pressure',
+            color: Highcharts.getOptions().colors[2],
+            data: this.pressures,
+            marker: {
+                enabled: false
+            },
+            shadow: false,
+            tooltip: {
+                valueSuffix: ' hPa'
+            },
+            dashStyle: 'shortdot',
+            yAxis: 2
+        }, {
+            name: 'Wind',
+            type: 'windbarb',
+            id: 'windbarbs',
+            color: Highcharts.getOptions().colors[1],
+            lineWidth: 1.5,
+            data: this.winds,
+            vectorLength: 18,
+            yOffset: -15,
+            tooltip: {
+                valueSuffix: ' m/s'
+            }
+        }]
+    };
+};
+
+/**
+ * Post-process the chart from the callback function, the second argument
+ * Highcharts.Chart.
+ */
+Meteogram.prototype.onChartLoad = function (chart) {
+
+    this.drawWeatherSymbols(chart);
+    this.drawBlocksForWindArrows(chart);
+
+};
+
+/**
+ * Create the chart. This function is called async when the data file is loaded
+ * and parsed.
+ */
+Meteogram.prototype.createChart = function () {
+    this.chart = new Highcharts.Chart(this.getChartOptions(), chart => {
+        this.onChartLoad(chart);
+    });
+};
+
+Meteogram.prototype.error = function () {
+    document.getElementById('loading').innerHTML =
+        '<i class="fa fa-frown-o"></i> Failed loading data, please try again later';
+};
+
+/**
+ * Handle the data. This part of the code is not Highcharts specific, but deals
+ * with yr.no's specific data format
+ */
+Meteogram.prototype.parseYrData = function () {
+
+    let pointStart;
+
+    if (!this.json) {
+        return this.error();
+    }
+
+    // Loop over hourly (or 6-hourly) forecasts
+    this.json.properties.timeseries.forEach((node, i) => {
+
+        const x = Date.parse(node.time),
+            nextHours = node.data.next_1_hours || node.data.next_6_hours,
+            symbolCode = nextHours && nextHours.summary.symbol_code,
+            to = node.data.next_1_hours ? x + 36e5 : x + 6 * 36e5;
+
+        if (to > pointStart + 48 * 36e5) {
+            return;
+        }
+
+        // Populate the parallel arrays
+        this.symbols.push(nextHours.summary.symbol_code);
+
+        this.temperatures.push({
+            x,
+            y: node.data.instant.details.air_temperature,
+            // custom options used in the tooltip formatter
+            to,
+            symbolName: Meteogram.dictionary[
+                symbolCode.replace(/_(day|night)$/, '')
+            ].text
+        });
+
+        this.precipitations.push({
+            x,
+            y: nextHours.details.precipitation_amount
+        });
+
+        if (i % 2 === 0) {
+            this.winds.push({
+                x,
+                value: node.data.instant.details.wind_speed,
+                direction: node.data.instant.details.wind_from_direction
+            });
+        }
+
+        this.pressures.push({
+            x,
+            y: node.data.instant.details.air_pressure_at_sea_level
+        });
+
+        if (i === 0) {
+            pointStart = (x + to) / 2;
+        }
+    });
+
+    // Create the chart when the data is loaded
+    this.createChart();
+};
+// End of the Meteogram protype
+
+
+// On DOM ready...
+
+// Set the hash to the yr.no URL we want to parse
+if (!location.hash) {
+    location.hash = 'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={{ lat }}&lon={{ lon }}&altitude=25';
+}
+
+const url = location.hash.substr(1);
+Highcharts.ajax({
+    url,
+    dataType: 'json',
+    success: json => {
+        window.meteogram = new Meteogram(json, 'chart2');
+    },
+    error: Meteogram.prototype.error,
+    headers: {
+        // Override the Content-Type to avoid preflight problems with CORS
+        // in the Highcharts demos
+        'Content-Type': 'text/plain'
+    }
+});
+
+
+
+function drawChart(data) {
+    return Highcharts.mapChart('chart4', {
+        chart: {
+            map: 'custom/world',
+            borderWidth: 1
+        },
+
+        colors: ['rgba(19,64,117,0.05)', 'rgba(19,64,117,0.2)', 'rgba(19,64,117,0.4)',
+            'rgba(19,64,117,0.5)', 'rgba(19,64,117,0.6)', 'rgba(19,64,117,0.8)', 'rgba(19,64,117,1)'],
+
+        title: {
+            text: 'Air pollution / fossil-fuel related deaths by country (/km²)'
+        },
+
+        mapNavigation: {
+            enabled: true
+        },
+
+        legend: {
+            title: {
+                text: 'Individuals per km²',
+                style: {
+                    color: ( // theme
+                        Highcharts.defaultOptions &&
+                        Highcharts.defaultOptions.legend &&
+                        Highcharts.defaultOptions.legend.title &&
+                        Highcharts.defaultOptions.legend.title.style &&
+                        Highcharts.defaultOptions.legend.title.style.color
+                    ) || 'black'
+                }
+            },
+            align: 'left',
+            verticalAlign: 'bottom',
+            floating: true,
+            layout: 'vertical',
+            valueDecimals: 0,
+            backgroundColor: ( // theme
+                Highcharts.defaultOptions &&
+                Highcharts.defaultOptions.legend &&
+                Highcharts.defaultOptions.legend.backgroundColor
+            ) || 'rgba(255, 255, 255, 0.85)',
+            symbolRadius: 0,
+            symbolHeight: 14
+        },
+
+        colorAxis: {
+            dataClasses: [{
+                to: 3
+            }, {
+                from: 3,
+                to: 10
+            }, {
+                from: 10,
+                to: 30
+            }, {
+                from: 30,
+                to: 100
+            }, {
+                from: 100,
+                to: 300
+            }, {
+                from: 300,
+                to: 1000
+            }, {
+                from: 1000
+            }]
+        },
+
+        credits: {
+            text: 'Data from <a href="https://ourworldindata.org/data-review-air-pollution-deaths">ourworldindata</a>',
+            href: 'https://ourworldindata.org/data-review-air-pollution-deaths',
+            position: {
+                x: -40
+            },
+        },
+
+        series: [{
+            data: data,
+            joinBy: ['iso-a2', 'code'],
+            animation: true,
+            name: 'Air pollution / fossil-fuel related deaths',
+            states: {
+                hover: {
+                    color: '#a4edba'
+                }
+            },
+            tooltip: {
+                valueSuffix: '/km²'
+            },
+            shadow: false
+        }]
+    });
+}
+
+// Load the data from a Google Spreadsheet
+// https://docs.google.com/spreadsheets/d/1WBx3mRqiomXk_ks1a5sEAtJGvYukguhAkcCuRDrY1L0/pubhtml
+
+
+        // Read the columns into the data array
+        const data = [{
+                code: "AF",
+                name: "Afghanistan",
+                value: 53
+              }, {
+                code: "AL",
+                name: "Albania",
+                value: 117
+              }, {
+                code: "DZ",
+                name: "Algeria",
+                value: 15
+              }, {
+                code: "AS",
+                name: "American Samoa",
+                value: 342
+              }, {
+                code: "AD",
+                name: "Andorra",
+                value: 181
+              }, {
+                code: "AO",
+                name: "Angola",
+                value: 15
+              }, {
+                code: "AI",
+                name: "Antigua and Barbuda",
+                value: 202
+              }, {
+                code: "AR",
+                name: "Argentina",
+                value: 15
+              }, {
+                code: "AM",
+                name: "Armenia",
+                value: 109
+              }, {
+                code: "AW",
+                name: "Aruba",
+                value: 597
+              }, {
+                code: "AU",
+                name: "Australia",
+                value: 3
+              }, {
+                code: "AT",
+                name: "Austria",
+                value: 102
+              }, {
+                code: "AZ",
+                name: "Azerbaijan",
+                value: 110
+              }, {
+                code: "BS",
+                name: "Bahamas, The",
+                value: 34
+              }, {
+                code: "BH",
+                name: "Bahrain",
+                value: 1660
+              }, {
+                code: "BD",
+                name: "Bangladesh",
+                value: 1142
+              }, {
+                code: "BB",
+                name: "Barbados",
+                value: 636
+              }, {
+                code: "BY",
+                name: "Belarus",
+                value: 47
+              }, {
+                code: "BE",
+                name: "Belgium",
+                value: 359
+              }, {
+                code: "BZ",
+                name: "Belize",
+                value: 15
+              }, {
+                code: "BJ",
+                name: "Benin",
+                value: 80
+              }, {
+                code: "BM",
+                name: "Bermuda",
+                value: 1292
+              }, {
+                code: "BT",
+                name: "Bhutan",
+                value: 19
+              }, {
+                code: "BO",
+                name: "Bolivia",
+                value: 9
+              }, {
+                code: "BA",
+                name: "Bosnia and Herzegovina",
+                value: 73
+              }, {
+                code: "BW",
+                name: "Botswana",
+                value: 4
+              }, {
+                code: "BR",
+                name: "Brazil",
+                value: 23
+              }, {
+                code: "BN",
+                name: "Brunei Darussalam",
+                value: 76
+              }, {
+                code: "BG",
+                name: "Bulgaria",
+                value: 69
+              }, {
+                code: "BF",
+                name: "Burkina Faso",
+                value: 60
+              }, {
+                code: "BI",
+                name: "Burundi",
+                value: 326
+              }, {
+                code: "KH",
+                name: "Cambodia",
+                value: 80
+              }, {
+                code: "CM",
+                name: "Cameroon",
+                value: 41
+              }, {
+                code: "CA",
+                name: "Canada",
+                value: 4
+              }, {
+                code: "CV",
+                name: "Cape Verde",
+                value: 123
+              }, {
+                code: "KY",
+                name: "Cayman Islands",
+                value: 234
+              }, {
+                code: "CF",
+                name: "Central African Republic",
+                value: 7
+              }, {
+                code: "TD",
+                name: "Chad",
+                value: 9
+              }, {
+                code: "CL",
+                name: "Chile",
+                value: 23
+              }, {
+                code: "CN",
+                name: "China",
+                value: 143
+              }, {
+                code: "CO",
+                name: "Colombia",
+                value: 42
+              }, {
+                code: "KM",
+                name: "Comoros",
+                value: 395
+              }, {
+                code: "CD",
+                name: "Congo, Dem. Rep.",
+                value: 29
+              }, {
+                code: "CG",
+                name: "Congo, Rep.",
+                value: 12
+              }, {
+                code: "CR",
+                name: "Costa Rica",
+                value: 91
+              }, {
+                code: "CI",
+                name: "Cote d'Ivoire",
+                value: 62
+              }, {
+                code: "HR",
+                name: "Croatia",
+                value: 79
+              }, {
+                code: "CU",
+                name: "Cuba",
+                value: 106
+              }, {
+                code: "CW",
+                name: "Curacao",
+                value: 321
+              }, {
+                code: "CY",
+                name: "Cyprus",
+                value: 119
+              }, {
+                code: "CZ",
+                name: "Czech Republic",
+                value: 136
+              }, {
+                code: "DK",
+                name: "Denmark",
+                value: 131
+              }, {
+                code: "DJ",
+                name: "Djibouti",
+                value: 38
+              }, {
+                code: "DM",
+                name: "Dominica",
+                value: 90
+              }, {
+                code: "DO",
+                name: "Dominican Republic",
+                value: 205
+              }, {
+                code: "EC",
+                name: "Ecuador",
+                value: 58
+              }, {
+                code: "EG",
+                name: "Egypt, Arab Rep.",
+                value: 81
+              }, {
+                code: "SV",
+                name: "El Salvador",
+                value: 299
+              }, {
+                code: "GQ",
+                name: "Equatorial Guinea",
+                value: 25
+              }, {
+                code: "ER",
+                name: "Eritrea",
+                value: 52
+              }, {
+                code: "EE",
+                name: "Estonia",
+                value: 32
+              }, {
+                code: "ET",
+                name: "Ethiopia",
+                value: 83
+              }, {
+                code: "FO",
+                name: "Faeroe Islands",
+                value: 35
+              }, {
+                code: "FJ",
+                name: "Fiji",
+                value: 47
+              }, {
+                code: "FI",
+                name: "Finland",
+                value: 18
+              }, {
+                code: "FR",
+                name: "France",
+                value: 118
+              }, {
+                code: "PF",
+                name: "French Polynesia",
+                value: 74
+              }, {
+                code: "GA",
+                name: "Gabon",
+                value: 6
+              }, {
+                code: "GM",
+                name: "Gambia, The",
+                value: 173
+              }, {
+                code: "GE",
+                name: "Georgia",
+                value: 78
+              }, {
+                code: "DE",
+                name: "Germany",
+                value: 234
+              }, {
+                code: "GH",
+                name: "Ghana",
+                value: 107
+              }, {
+                code: "GR",
+                name: "Greece",
+                value: 88
+              }, {
+                code: "GL",
+                name: "Greenland",
+                value: 0
+              }, {
+                code: "GD",
+                name: "Grenada",
+                value: 307
+              }, {
+                code: "GU",
+                name: "Guam",
+                value: 333
+              }, {
+                code: "GT",
+                name: "Guatemala",
+                value: 134
+              }, {
+                code: "GN",
+                name: "Guinea",
+                value: 41
+              }, {
+                code: "GW",
+                name: "Guinea-Bissau",
+                value: 54
+              }, {
+                code: "GY",
+                name: "Guyana",
+                value: 4
+              }, {
+                code: "HT",
+                name: "Haiti",
+                value: 363
+              }, {
+                code: "HN",
+                name: "Honduras",
+                value: 68
+              }, {
+                code: "HK",
+                name: "Hong Kong SAR, China",
+                value: 6783
+              }, {
+                code: "HU",
+                name: "Hungary",
+                value: 112
+              }, {
+                code: "IS",
+                name: "Iceland",
+                value: 3
+              }, {
+                code: "IN",
+                name: "India",
+                value: 394
+              }, {
+                code: "ID",
+                name: "Indonesia",
+                value: 132
+              }, {
+                code: "IR",
+                name: "Iran, Islamic Rep.",
+                value: 45
+              }, {
+                code: "IQ",
+                name: "Iraq",
+                value: 73
+              }, {
+                code: "IE",
+                name: "Ireland",
+                value: 65
+              }, {
+                code: "IM",
+                name: "Isle of Man",
+                value: 145
+              }, {
+                code: "IL",
+                name: "Israel",
+                value: 352
+              }, {
+                code: "IT",
+                name: "Italy",
+                value: 206
+              }, {
+                code: "JM",
+                name: "Jamaica",
+                value: 250
+              }, {
+                code: "JP",
+                name: "Japan",
+                value: 350
+              }, {
+                code: "JO",
+                name: "Jordan",
+                value: 69
+              }, {
+                code: "KZ",
+                name: "Kazakhstan",
+                value: 6
+              }, {
+                code: "KE",
+                name: "Kenya",
+                value: 71
+              }, {
+                code: "KI",
+                name: "Kiribati",
+                value: 123
+              }, {
+                code: "KP",
+                name: "Korea, Dem. Rep.",
+                value: 202
+              }, {
+                code: "KR",
+                name: "Korea, Rep.",
+                value: 504
+              }, {
+                code: "XK",
+                name: "Kosovo",
+                value: 167
+              }, {
+                code: "KW",
+                name: "Kuwait",
+                value: 154
+              }, {
+                code: "KG",
+                name: "Kyrgyz Republic",
+                value: 28
+              }, {
+                code: "LA",
+                name: "Lao PDR",
+                value: 27
+              }, {
+                code: "LV",
+                name: "Latvia",
+                value: 36
+              }, {
+                code: "LB",
+                name: "Lebanon",
+                value: 413
+              }, {
+                code: "LS",
+                name: "Lesotho",
+                value: 72
+              }, {
+                code: "LR",
+                name: "Liberia",
+                value: 41
+              }, {
+                code: "LY",
+                name: "Libya",
+                value: 4
+              }, {
+                code: "LI",
+                name: "Liechtenstein",
+                value: 225
+              }, {
+                code: "LT",
+                name: "Lithuania",
+                value: 53
+              }, {
+                code: "LU",
+                name: "Luxembourg",
+                value: 195
+              }, {
+                code: "MO",
+                name: "Macao SAR, China",
+                value: 19416
+              }, {
+                code: "MK",
+                name: "Macedonia, FYR",
+                value: 82
+              }, {
+                code: "MG",
+                name: "Madagascar",
+                value: 36
+              }, {
+                code: "MW",
+                name: "Malawi",
+                value: 158
+              }, {
+                code: "MY",
+                name: "Malaysia",
+                value: 86
+              }, {
+                code: "MV",
+                name: "Maldives",
+                value: 1053
+              }, {
+                code: "ML",
+                name: "Mali",
+                value: 13
+              }, {
+                code: "MT",
+                name: "Malta",
+                value: 1291
+              }, {
+                code: "MH",
+                name: "Marshall Islands",
+                value: 300
+              }, {
+                code: "MR",
+                name: "Mauritania",
+                value: 3
+              }, {
+                code: "MU",
+                name: "Mauritius",
+                value: 631
+              }, {
+                code: "YT",
+                name: "Mayotte",
+                value: 552
+              }, {
+                code: "MX",
+                name: "Mexico",
+                value: 58
+              }, {
+                code: "FM",
+                name: "Micronesia, Fed. Sts.",
+                value: 159
+              }, {
+                code: "MD",
+                name: "Moldova",
+                value: 124
+              }, {
+                code: "MC",
+                name: "Monaco",
+                value: 17704
+              }, {
+                code: "MN",
+                name: "Mongolia",
+                value: 2
+              }, {
+                code: "ME",
+                name: "Montenegro",
+                value: 47
+              }, {
+                code: "MA",
+                name: "Morocco",
+                value: 72
+              }, {
+                code: "MZ",
+                name: "Mozambique",
+                value: 30
+              }, {
+                code: "MM",
+                name: "Myanmar",
+                value: 73
+              }, {
+                code: "NA",
+                name: "Namibia",
+                value: 3
+              }, {
+                code: "NP",
+                name: "Nepal",
+                value: 209
+              }, {
+                code: "NL",
+                name: "Netherlands",
+                value: 492
+              }, {
+                code: "NC",
+                name: "New Caledonia",
+                value: 14
+              }, {
+                code: "NZ",
+                name: "New Zealand",
+                value: 17
+              }, {
+                code: "NI",
+                name: "Nicaragua",
+                value: 48
+              }, {
+                code: "NE",
+                name: "Niger",
+                value: 12
+              }, {
+                code: "NG",
+                name: "Nigeria",
+                value: 174
+              }, {
+                code: "MP",
+                name: "Northern Mariana Islands",
+                value: 132
+              }, {
+                code: "NO",
+                name: "Norway",
+                value: 16
+              }, {
+                code: "OM",
+                name: "Oman",
+                value: 9
+              }, {
+                code: "PK",
+                name: "Pakistan",
+                value: 225
+              }, {
+                code: "PW",
+                name: "Palau",
+                value: 45
+              }, {
+                code: "PA",
+                name: "Panama",
+                value: 47
+              }, {
+                code: "PG",
+                name: "Papua New Guinea",
+                value: 15
+              }, {
+                code: "PY",
+                name: "Paraguay",
+                value: 16
+              }, {
+                code: "PE",
+                name: "Peru",
+                value: 23
+              }, {
+                code: "PH",
+                name: "Philippines",
+                value: 313
+              }, {
+                code: "PL",
+                name: "Poland",
+                value: 126
+              }, {
+                code: "PT",
+                name: "Portugal",
+                value: 116
+              }, {
+                code: "PR",
+                name: "Puerto Rico",
+                value: 449
+              }, {
+                code: "WA",
+                name: "Qatar",
+                value: 152
+              }, {
+                code: "RO",
+                name: "Romania",
+                value: 93
+              }, {
+                code: "RU",
+                name: "Russian Federation",
+                value: 9
+              }, {
+                code: "RW",
+                name: "Rwanda",
+                value: 431
+              }, {
+                code: "WS",
+                name: "Samoa",
+                value: 65
+              }, {
+                code: "SM",
+                name: "San Marino",
+                value: 526
+              }, {
+                code: "ST",
+                name: "Sao Tome and Principe",
+                value: 172
+              }, {
+                code: "SA",
+                name: "Saudi Arabia",
+                value: 14
+              }, {
+                code: "SN",
+                name: "Senegal",
+                value: 65
+              }, {
+                code: "RS",
+                name: "Serbia",
+                value: 83
+              }, {
+                code: "SC",
+                name: "Seychelles",
+                value: 188
+              }, {
+                code: "SL",
+                name: "Sierra Leone",
+                value: 82
+              }, {
+                code: "SG",
+                name: "Singapore",
+                value: 7252
+              }, {
+                code: "SK",
+                name: "Slovak Republic",
+                value: 113
+              }, {
+                code: "SI",
+                name: "Slovenia",
+                value: 102
+              }, {
+                code: "SB",
+                name: "Solomon Islands",
+                value: 19
+              }, {
+                code: "SO",
+                name: "Somalia",
+                value: 15
+              }, {
+                code: "ZA",
+                name: "South Africa",
+                value: 41
+              }, {
+                code: "SS",
+                name: "South Sudan",
+                value: NaN
+              }, {
+                code: "ES",
+                name: "Spain",
+                value: 92
+              }, {
+                code: "LK",
+                name: "Sri Lanka",
+                value: 333
+              }, {
+                code: "KN",
+                name: "St. Kitts and Nevis",
+                value: 202
+              }, {
+                code: "LC",
+                name: "St. Lucia",
+                value: 285
+              }, {
+                code: "MF",
+                name: "St. Martin (French part)",
+                value: 556
+              }, {
+                code: "VC",
+                name: "St. Vincent and the Grenadines",
+                value: 280
+              }, {
+                code: "SD",
+                name: "Sudan",
+                value: 18
+              }, {
+                code: "SR",
+                name: "Suriname",
+                value: 3
+              }, {
+                code: "SZ",
+                name: "Swaziland",
+                value: 69
+              }, {
+                code: "SE",
+                name: "Sweden",
+                value: 23
+              }, {
+                code: "CH",
+                name: "Switzerland",
+                value: 196
+              }, {
+                code: "SY",
+                name: "Syrian Arab Republic",
+                value: 111
+              }, {
+                code: "TJ",
+                name: "Tajikistan",
+                value: 49
+              }, {
+                code: "TZ",
+                name: "Tanzania",
+                value: 51
+              }, {
+                code: "TH",
+                name: "Thailand",
+                value: 135
+              }, {
+                code: "TP",
+                name: "Timor-Leste",
+                value: 76
+              }, {
+                code: "TG",
+                name: "Togo",
+                value: 111
+              }, {
+                code: "TO",
+                name: "Tonga",
+                value: 145
+              }, {
+                code: "TT",
+                name: "Trinidad and Tobago",
+                value: 261
+              }, {
+                code: "TN",
+                name: "Tunisia",
+                value: 68
+              }, {
+                code: "TR",
+                name: "Turkey",
+                value: 95
+              }, {
+                code: "TM",
+                name: "Turkmenistan",
+                value: 11
+              }, {
+                code: "TC",
+                name: "Turks and Caicos Islands",
+                value: 40
+              }, {
+                code: "TV",
+                name: "Tuvalu",
+                value: 328
+              }, {
+                code: "UG",
+                name: "Uganda",
+                value: 170
+              }, {
+                code: "UA",
+                name: "Ukraine",
+                value: 79
+              }, {
+                code: "AE",
+                name: "United Arab Emirates",
+                value: 90
+              }, {
+                code: "UK",
+                name: "United Kingdom",
+                value: 257
+              }, {
+                code: "US",
+                name: "United States",
+                value: 34
+              }, {
+                code: "UY",
+                name: "Uruguay",
+                value: 19
+              }, {
+                code: "UZ",
+                name: "Uzbekistan",
+                value: 66
+              }, {
+                code: "VU",
+                name: "Vanuatu",
+                value: 20
+              }, {
+                code: "VE",
+                name: "Venezuela, RB",
+                value: 33
+              }, {
+                code: "VN",
+                name: "Vietnam",
+                value: 280
+              }, {
+                code: "VI",
+                name: "Virgin Islands (U.S.)",
+                value: 314
+              }, {
+                code: "PS",
+                name: "West Bank and Gaza",
+                value: 690
+              }, {
+                code: "EH",
+                name: "Western Sahara",
+                value: 2
+              }, {
+                code: "YE",
+                name: "Yemen, Rep.",
+                value: 46
+              }, {
+                code: "ZM",
+                name: "Zambia",
+                value: 17
+              }, {
+                code: "ZW",
+                name: "Zimbabwe",
+                value: 32
+              }];
+        console.log(data);
+
+        drawChart(data);
+              
+
+
+    </script>
+
+    <script>
+
+Highcharts.getJSON(
+    'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/usdeur.json',
+    function (data) {
+
+        Highcharts.chart('chart7', {
+            chart: {
+                zoomType: 'x'
+            },
+            title: {
+                text: "{{ ptitle }}"
+            },
+            subtitle: {
+                text: document.ontouchstart === undefined ?
+                    'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: 'Value'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, Highcharts.getOptions().colors[0]],
+                            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+
+            series: [{
+                type: 'area',
+                name: 'Climate variable',
+                data: {{pdata}}
+            }]
+        });
+    }
+);
+/*
+      Highcharts.chart('', {
+
+title: {
+    text: "{{ ptitle }}"
+},
+
+subtitle: {
+    text: 'Source: Obs_Hist_Location'
+},
+
+yAxis: {
+    title: {
+        text: 'Value'
+    }
+},
+
+xAxis: {
+    accessibility: {
+        rangeDescription: 'Range: 1893 to 2014'
+    }
+},
+
+legend: {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'middle'
+},
+
+plotOptions: {
+    series: {
+        label: {
+            connectorAllowed: false
+        },
+        pointStart: 2010
+    }
+},
+
+series: [{
+        name: 'Installation',
+        data: "{{pdata}}"
+    }],
+  
+    turboThreshold: 50000,
+
+responsive: {
+    rules: [{
+        condition: {
+            maxWidth: 500
+        },
+        chartOptions: {
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                verticalAlign: 'bottom'
+            }
+        }
+    }]
+}
+
+});*/
     </script>
 
   </body>

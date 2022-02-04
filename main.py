@@ -12,6 +12,7 @@ from pyowm.utils import config
 from pyowm.utils import timestamps
 import random
 import pandas as pd
+from datetime import datetime, timezone
 
 df = pd.read_csv("countries_of_the_world.csv")
 # https://stackoverflow.com/questions/69845519/fastapi-interactive-plot-update-in-template-with-highcharts
@@ -98,7 +99,7 @@ async def dash(request: Request):
     print(form_data)
     try:
         loc = form_data.get("myCountry", "Cave Creek, United States")
-        transformed_loc = app.mapper.get(loc, "Cave Creek,US")
+        transformed_loc, lat, lon = app.mapper.get(loc, "Cave Creek,US")
         
         age = 2022 - int(form_data.get("birthday").split("-")[0])
 
@@ -202,6 +203,51 @@ async def dash(request: Request):
     except:
         pass
 
+    df = pd.read_excel("01_Obs_HIst_location_01.xls")
+
+    print(df.keys())
+
+    prcp = list(df['Unnamed: 5'][1:].fillna(0))
+    tave = list(df['Unnamed: 6'][1:].fillna(0))
+    tmax = list(df['Unnamed: 7'][1:].fillna(0))
+    tmin = list(df['Unnamed: 8'][1:].fillna(0))
+
+    dates = []
+    d = list(df['Unnamed: 0'][1:].fillna(0))
+    m = list(df['Unnamed: 2'][1:].fillna(0))
+    y = list(df['Unnamed: 4'][1:].fillna(0))
+
+
+    for i in range(len(d)):
+        DATE = f"{y[i]}-{m[i]}-{d[i]} 12:00"
+        ts = datetime.strptime(DATE, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).timestamp()
+        # dates.append(int(str(int(ts)) + '000'))
+        if type(prcp[i]) == str or type(prcp[i]) == None:
+            prcp[i] = 0
+        if type(tave[i]) == str or type(tave[i]) == None:
+            tave[i] = 0
+        if type(tmin[i]) == str or type(tmin[i]) == None:
+            tmin[i] = 0
+        if type(tmax[i]) == str or type(tmax[i]) == None:
+            tmax[i] = 0
+
+        dates.append(int(ts))
+
+
+
+    if form_data.get('variable') == 'tave':
+        ptitle = "Average temperate (F) for state 368449 from 1893 to 2014"
+        pdata = [[x[0], x[1]] for x in list(zip(dates, tave))]
+    elif form_data.get('variable') == 'tmax':
+        ptitle = "Max temperate (F) for state 368449 from 1893 to 2014"
+        pdata = [[x[0], x[1]] for x in list(zip(dates, tmax))]
+    elif form_data.get('variable') == 'tmin':
+        ptitle = "Min temperate (F) for state 368449 from 1893 to 2014"
+        pdata = [[x[0], x[1]] for x in list(zip(dates, tmin))]
+    elif form_data.get('variable') == 'prcp':
+        ptitle = "Precipitation (in) for state 368449 from 1893 to 2014"
+        pdata = [[x[0], x[1]] for x in list(zip(dates, prcp))]
+
     date_mapper_all = {
                        "sun": [sun, str(random.randint(37,94)) + " %", "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Nuvola_weather_sunny.svg/1200px-Nuvola_weather_sunny.svg.png", "Will it be sunny later?"],
                        "rain": [rain, str(random.randint(37,94)) + " %", "https://png.pngtree.com/png-clipart/20210224/ourlarge/pngtree-rainy-weather-png-image_2923917.jpg", "Will it be rainy later?"],
@@ -230,9 +276,13 @@ async def dash(request: Request):
 
     plot_3_data = [100, 100, 100]
 
+    print(pdata)
+    print(len(pdata))
+
 
     return templates.TemplateResponse("dash.html", {"request": request, "location": loc, "age": age, "title": "my random graph",
                                                        "ws" : ws, "wind" : wind, "hum" : hum, "temp" : temp,
+                                                       "lat" : lat, "lon" : lon, "ptitle" : ptitle, "pdata" : pdata,
                                                        "pop_dens" : pop_dens, "crops" : crops, "coastline" : coastline,
                                                        "deathrate" : deathrate, "wp" : weather_patterns,
                                                        "db_result": date_mapper_all, "recom" : recom,

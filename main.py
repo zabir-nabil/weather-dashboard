@@ -44,7 +44,8 @@ for i in range(len(coun)):
     app.country_info[coun[i].strip()] = [ str(pop_dens[i]).replace(',', '.'), str(crops[i]).replace(',', '.'), str(coastline[i]).replace(',', '.'),
     str(deathrate[i]).replace(',', '.') ]
 
-app.owm = OWM('YOUR_API_KEY')
+api_key = str(open("API_KEY.txt").read()).strip()
+app.owm = OWM(api_key)
 app.mgr = app.owm.weather_manager()
 
 app.oreg = app.owm.city_id_registry()

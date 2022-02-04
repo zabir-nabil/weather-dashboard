@@ -1,0 +1,202 @@
+[
+    {
+        "value": 3,
+        "code": "nj"
+    },
+    {
+        "value": 2,
+        "code": "ri"
+    },
+    {
+        "value": 5,
+        "code": "ma"
+    },
+    {
+        "value": 12.4,
+        "code": "ct"
+    },
+    {
+        "value": 209.23,
+        "code": "md"
+    },
+    {
+        "value": 19.18,
+        "code": "ny"
+    },
+    {
+        "value": 15.87,
+        "code": "de"
+    },
+    {
+        "value": 11.43,
+        "code": "fl"
+    },
+    {
+        "value": 10.05,
+        "code": "oh"
+    },
+    {
+        "value": 10.8,
+        "code": "pa"
+    },
+    {
+        "value": 18.27,
+        "code": "il"
+    },
+    {
+        "value": 63.85,
+        "code": "ca"
+    },
+    {
+        "value": 72.83,
+        "code": "hi"
+    },
+    {
+        "value": 69.03,
+        "code": "va"
+    },
+    {
+        "value": 17.55,
+        "code": "mi"
+    },
+    {
+        "value": 15.46,
+        "code": "in"
+    },
+    {
+        "value": 63.8,
+        "code": "nc"
+    },
+    {
+        "value": 54.59,
+        "code": "ga"
+    },
+    {
+        "value": 53.29,
+        "code": "tn"
+    },
+    {
+        "value": 13.2,
+        "code": "nh"
+    },
+    {
+        "value": 51.45,
+        "code": "sc"
+    },
+    {
+        "value": 39.61,
+        "code": "la"
+    },
+    {
+        "value": 39.28,
+        "code": "ky"
+    },
+    {
+        "value": 18.13,
+        "code": "wi"
+    },
+    {
+        "value": 14.2,
+        "code": "wa"
+    },
+    {
+        "value": 53.84,
+        "code": "al"
+    },
+    {
+        "value": 31.36,
+        "code": "mo"
+    },
+    {
+        "value": 50.75,
+        "code": "tx"
+    },
+    {
+        "value": 29,
+        "code": "wv"
+    },
+    {
+        "value": 15.41,
+        "code": "vt"
+    },
+    {
+        "value": 13.86,
+        "code": "mn"
+    },
+    {
+        "value": 69.1,
+        "code": "ms"
+    },
+    {
+        "value": 20.22,
+        "code": "ia"
+    },
+    {
+        "value": 49,
+        "code": "ar"
+    },
+    {
+        "value": 52.6,
+        "code": "ok"
+    },
+    {
+        "value": 43,
+        "code": "az"
+    },
+    {
+        "value": 51,
+        "code": "co"
+    },
+    {
+        "value": 15.95,
+        "code": "me"
+    },
+    {
+        "value": 13.76,
+        "code": "or"
+    },
+    {
+        "value": 62,
+        "code": "ks"
+    },
+    {
+        "value": 31,
+        "code": "ut"
+    },
+    {
+        "value": 17,
+        "code": "ne"
+    },
+    {
+        "value": 51,
+        "code": "nv"
+    },
+    {
+        "value": 27,
+        "code": "id"
+    },
+    {
+        "value": 67,
+        "code": "nm"
+    },
+    {
+        "value": 32,
+        "code": "sd"
+    },
+    {
+        "value": 19,
+        "code": "nd"
+    },
+    {
+        "value": 23,
+        "code": "mt"
+    },
+    {
+        "value": 41,
+        "code": "wy"
+    },
+    {
+        "value": 61,
+        "code": "ak"
+    }
+]
